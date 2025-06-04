@@ -1,0 +1,91 @@
+Just installed proxmox to my laptop via usb and I set the ip static ip 192.168.1.163/24. 
+
+First thing I did to my proxmox server was removing the enterprise repositories cause I dont have a subscription and if they are not removed it doesn't let to update the system.
+(error code:
+
+starting apt-get update
+Hit:1 http://security.debian.org/debian-security bookworm-security InRelease
+Hit:2 http://ftp.debian.org/debian bookworm InRelease
+Hit:3 http://ftp.debian.org/debian bookworm-updates InRelease
+Hit:4 http://download.proxmox.com/debian/pve bookworm InRelease
+Err:5 https://enterprise.proxmox.com/debian/ceph-quincy bookworm InRelease
+  401  Unauthorized [IP: 45.84.67.184 443]
+Reading package lists...
+E: Failed to fetch https://enterprise.proxmox.com/debian/ceph-quincy/dists/bookworm/InRelease  401  Unauthorized [IP: 45.84.67.184 443]
+E: The repository 'https://enterprise.proxmox.com/debian/ceph-quincy bookworm InRelease' is not signed.
+TASK ERROR: command 'apt-get update' failed: exit code 100) 
+
+
+And after this I needed to make sure my laptop keeps running even after I close the screen cause it get dust if it is not closed , and I solved this by editing this configuration "/etc/systemd/logind.conf"
+I removed "#" from this "HandleLidSwitchDocked=ignore" and also added to the file this line "HandleLidSwitch=ignore" after adding these I run the command "systemctl restart systemd-logind" to restart the service and making sure it works (I even tried closing a few times the screen by hand just in case hahah)
+
+
+After these configurations I needed to make sure that my proxmox server updates and upgrades everyday but also makes sure to back up everyday the system and compress it to save space in the storage. I want to be honest in this specific scenario I asked grok by xAI to make me a bash script that makes sure it gets done what I want and also for future vm-s and containers it checks if there are and backups.
+I run this command "nano /root/proxmox-update-backup.sh" which at the same time creates bashscript textfile and opens it in the nano text editor with root permisions and there I paste the bash code provided by grok which is:
+
+#!/bin/bash
+# Script to update Proxmox and create compressed backups of VMs and containers
+
+# Log file for tracking updates and backups
+LOGFILE="/var/log/proxmox-update-backup.log"
+BACKUP_DIR="/var/lib/vz/dump" # Default Proxmox backup directory
+DATE=$(date '+%Y-%m-%d_%H-%M-%S')
+
+# Redirect output to log file
+exec >> $LOGFILE 2>&1
+echo "=== Proxmox Update and Backup started at $DATE ==="
+
+# Step 1: Update package lists and upgrade Proxmox
+echo "Updating Proxmox..."
+apt update
+apt full-upgrade -y
+echo "Proxmox update completed."
+
+# Step 2: Get list of all VMs and containers
+VMS=$(qm list | awk 'NR>1 {print $1}') # Get VM IDs
+CTS=$(pct list | awk 'NR>1 {print $1}') # Get Container IDs
+
+# Step 3: Create compressed backups for each VM and container
+echo "Starting backups..."
+for ID in $VMS; do
+    echo "Backing up VM ID: $ID"
+    vzdump $ID --compress zstd --mode snapshot --dumpdir $BACKUP_DIR --mailto root
+    if [ $? -eq 0 ]; then
+        echo "Backup of VM $ID completed successfully."
+    else
+        echo "Backup of VM $ID failed."
+    fi
+done
+
+for ID in $CTS; do
+    echo "Backing up Container ID: $ID"
+    vzdump $ID --compress zstd --mode snapshot --dumpdir $BACKUP_DIR --mailto root
+    if [ $? -eq 0 ]; then
+        echo "Backup of Container $ID completed successfully."
+    else
+        echo "Backup of Container $ID failed."
+    fi
+done
+
+# Step 4: Clean up old backups (optional, keep last 3 backups)
+echo "Cleaning up old backups (keeping last 3)..."
+find $BACKUP_DIR -name "vzdump-*.tar.zst" -type f -mtime +7 -delete
+echo "Backup cleanup completed."
+
+echo "=== Proxmox Update and Backup finished at $(date '+%Y-%m-%d_%H-%M-%S') ==="
+
+
+After pasting it I run this command "chmod +x /root/proxmox-update-backup.sh" to make the bashscript file executable, and also run this command "crontab -e" and chosed option 1:
+  1. /bin/nano        <---- easiest
+  2. /usr/bin/vim.tiny
+ 
+and here pasted "0 2 * * * /root/proxmox-update-backup.sh" which runs cron every day at 2 AM executes the script mentioned above for updates and backup.
+
+
+
+
+
+
+
+
+
