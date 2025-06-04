@@ -1,25 +1,90 @@
-# BACKUP
+# AMADEUS
 
-## Per te ber back upp jepi run script te scr/proo.....sh
+## Web Service VM
+#### Ubuntu + Nginx (2GB RAM, 20GB storage, 1 vCPU).
+### Starting Nginx 
+
+```bash
+/src/nginx/setup.sh
+```
+
+
+
+
 
 e di vet ca do besh per te shpjeguar ca ke ber
 
 
-## Per ta ber back up cdo dit esht perdorur crontab src code esht twe src/backup/crontab.sh
-
+## Firewall Container
+#### Alpine + iptables (512MB RAM, 5GB storage, 1 vCPU).
 e di vet ca do besh per te shpjeguar ca ke ber
 
 
-# VPN
-
-conf i vpn esht perdorur kontenier me vm ne ubuntu 
 
 
-# FireWall
+
+
+
+
+
+
+
+## VPN Server VM
+#### Ubuntu + OpenVPN (1GB RAM, 10GB storage, 1 vCPU).
+
+conf i vpn esht perdorur kontenier me vm ne ubuntu
+
+
+
+
+
+
+
+
+
+
+
+## Reverse Proxy VM
+#### Ubuntu + Nginx (2GB RAM, 20GB storage, 1 vCPU).
 
 jkdhwefjwfru
 
-# Proxy
+
+
+
+
+
+
+
+
+
+## Monitoring Container
+#### Alpine + Prometheus (512MB RAM, 5GB storage, 1 vCPU).
+
+
+
+
+
+
+
+
+
+
+
+## Future Kubernetes VM
+#### Reserved (4GB RAM, 40GB storage, 2 vCPUs).
+
+
+
+
+
+
+
+
+
+## Remaining 5GB/402GB (with monitoring) or 5.5GB/407GB (without).
+
+
 
 
 
